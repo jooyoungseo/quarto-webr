@@ -1,3 +1,9 @@
+-- Retrieve the meta component
+local pandoc = require 'pandoc'
+
+local meta = pandoc.Meta
+
+quarto.log.output(meta)
 -- Define a variable to only include the initialization once
 local hasDoneWebRSetup = false
 -- Define a counter variable
@@ -38,6 +44,24 @@ editor_template = editorTemplateFile()
 ----
 
 
+-- Determine the names of packages to include in initialization
+function requiredPackages()
+  -- Get the array of package names from the document's metadata
+  local packageNames = meta.variables["packages"]
+
+  -- Loop over each package name and enclose it in double quotes
+  for _, packageName in pairs(packages) do
+    table.insert(quotedPackages, '"' .. packageName .. '"')
+  end
+
+  -- Join the quoted package names with commas
+  local packagesString = table.concat(quotedPackages, ', ')
+
+  -- Return the final string with enclosing double quotes
+  return "'" .. packagesString .. "'"
+end
+
+
 -- Setup WebR's pre-requisites once per document.
 function ensureWebRSetup()
   
@@ -48,6 +72,8 @@ function ensureWebRSetup()
   
   -- Otherwise, let's include the initialization script _once_
   hasDoneWebRSetup = true
+
+  quarto.log.output(requiredPackages())
   
   -- Insert the web initialization
   -- https://quarto.org/docs/extensions/lua-api.html#includes
